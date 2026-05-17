@@ -1,0 +1,17 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "run web with restaurant id",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"run",
+				"-d",
+				"chrome",
+				"--dart-define=RESTAURANT_ID=8862716b-e55a-469e-978a-cd63e15d599e"
+			],
+			"isBackground": true
+		}
+	]
+}

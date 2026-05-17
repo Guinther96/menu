@@ -8,7 +8,10 @@ final backendBaseUrlProvider = Provider<String>((ref) {
 });
 
 final restaurantIdProvider = Provider<String>((ref) {
-  return '11111111-1111-1111-1111-111111111111';
+  return const String.fromEnvironment(
+    'RESTAURANT_ID',
+    defaultValue: '8862716b-e55a-469e-978a-cd63e15d599e',
+  );
 });
 
 final orderClientApiServiceProvider = Provider<OrderClientApiService>((ref) {
@@ -18,16 +21,12 @@ final orderClientApiServiceProvider = Provider<OrderClientApiService>((ref) {
   return service;
 });
 
-/// FutureProvider exposing the menu DTOs from [OrderClientApiService].
-/// Named [clientMenuProvider] to avoid conflicts with the ordering feature's
-/// [menuProvider] StateNotifierProvider.
 final clientMenuProvider = FutureProvider<List<MenuItemDto>>((ref) async {
   final service = ref.watch(orderClientApiServiceProvider);
   final restaurantId = ref.watch(restaurantIdProvider);
   return service.fetchMenu(restaurantId);
 });
 
-/// FutureProvider exposing the restaurant tables from [OrderClientApiService].
 final clientTablesProvider = FutureProvider<List<TableDto>>((ref) async {
   final service = ref.watch(orderClientApiServiceProvider);
   final restaurantId = ref.watch(restaurantIdProvider);

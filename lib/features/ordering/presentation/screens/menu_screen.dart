@@ -23,6 +23,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
   final TextEditingController _searchController = TextEditingController();
   String? _selectedCategory;
   RangeValues _priceRange = const RangeValues(0, 50);
+  bool _didAutoExpandPriceRange = false;
   bool _onlyAvailable = false;
   final Map<String, int> _localQuantity = {};
 
@@ -100,8 +101,35 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                 .loadMenu(widget.session.restaurant.id),
           ),
           data: (items) {
+            final maxItemPrice = items.fold<double>(
+              0,
+              (currentMax, item) =>
+                  item.price > currentMax ? item.price : currentMax,
+            );
+            final sliderMax = maxItemPrice <= 0
+                ? 50.0
+                : (maxItemPrice * 1.2).ceilToDouble();
+
+            if (!_didAutoExpandPriceRange && sliderMax > _priceRange.end) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                setState(() {
+                  _priceRange = RangeValues(0, sliderMax);
+                  _didAutoExpandPriceRange = true;
+                });
+              });
+            }
+
+            final effectivePriceRange = RangeValues(
+              _priceRange.start.clamp(0, sliderMax).toDouble(),
+              _priceRange.end.clamp(0, sliderMax).toDouble(),
+            );
+
             final categories = items.map((e) => e.category).toSet().toList();
+            final previousPriceRange = _priceRange;
+            _priceRange = effectivePriceRange;
             final filtered = _filteredItems(items);
+            _priceRange = previousPriceRange;
 
             return Column(
               children: [
@@ -146,12 +174,12 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                   children: [
                     Expanded(
                       child: RangeSlider(
-                        values: _priceRange,
+                        values: effectivePriceRange,
                         min: 0,
-                        max: 50,
+                        max: sliderMax,
                         labels: RangeLabels(
-                          '${_priceRange.start.round()} G',
-                          '${_priceRange.end.round()} G',
+                          '${effectivePriceRange.start.round()} G',
+                          '${effectivePriceRange.end.round()} G',
                         ),
                         onChanged: (value) =>
                             setState(() => _priceRange = value),
