@@ -61,6 +61,19 @@ class _TableEntryScreenState extends ConsumerState<TableEntryScreen> {
 
   Widget _buildRealBackendEntry(BuildContext context) {
     final restaurantId = ref.watch(restaurantIdProvider);
+    if (restaurantId.isEmpty) {
+      return ListView(
+        children: [
+          const SizedBox(height: 24),
+          Text('Configuration requise', style: Theme.of(context).textTheme.headlineMedium),
+          const SizedBox(height: 8),
+          Text(
+            'RESTAURANT_ID est manquant. Lancez avec --dart-define=RESTAURANT_ID=votre_id.',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+        ],
+      );
+    }
     final tablesState = ref.watch(clientTablesProvider);
 
     return ListView(

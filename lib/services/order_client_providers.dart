@@ -8,11 +8,7 @@ final backendBaseUrlProvider = Provider<String>((ref) {
 });
 
 final restaurantIdProvider = Provider<String>((ref) {
-  const restaurantId = String.fromEnvironment('RESTAURANT_ID');
-  if (restaurantId.isEmpty) {
-    throw StateError('RESTAURANT_ID n\'est pas configure.');
-  }
-  return restaurantId;
+  return const String.fromEnvironment('RESTAURANT_ID');
 });
 
 final orderClientApiServiceProvider = Provider<OrderClientApiService>((ref) {
@@ -25,11 +21,17 @@ final orderClientApiServiceProvider = Provider<OrderClientApiService>((ref) {
 final clientMenuProvider = FutureProvider<List<MenuItemDto>>((ref) async {
   final service = ref.watch(orderClientApiServiceProvider);
   final restaurantId = ref.watch(restaurantIdProvider);
+  if (restaurantId.isEmpty) {
+    throw StateError('RESTAURANT_ID n\'est pas configure.');
+  }
   return service.fetchMenu(restaurantId);
 });
 
 final clientTablesProvider = FutureProvider<List<TableDto>>((ref) async {
   final service = ref.watch(orderClientApiServiceProvider);
   final restaurantId = ref.watch(restaurantIdProvider);
+  if (restaurantId.isEmpty) {
+    throw StateError('RESTAURANT_ID n\'est pas configure.');
+  }
   return service.fetchTables(restaurantId);
 });
