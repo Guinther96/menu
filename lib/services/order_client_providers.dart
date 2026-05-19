@@ -8,10 +8,11 @@ final backendBaseUrlProvider = Provider<String>((ref) {
 });
 
 final restaurantIdProvider = Provider<String>((ref) {
-  return const String.fromEnvironment(
-    'RESTAURANT_ID',
-    defaultValue: '8862716b-e55a-469e-978a-cd63e15d599e',
-  );
+  const restaurantId = String.fromEnvironment('RESTAURANT_ID');
+  if (restaurantId.isEmpty) {
+    throw StateError('RESTAURANT_ID n\'est pas configure.');
+  }
+  return restaurantId;
 });
 
 final orderClientApiServiceProvider = Provider<OrderClientApiService>((ref) {
