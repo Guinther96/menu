@@ -10,7 +10,28 @@ final backendBaseUrlProvider = Provider<String>((ref) {
 /// Returns the restaurant ID from the URL query parameter `restaurant_id`.
 /// Set by the QR code URL: https://yourapp.netlify.app/?restaurant_id=<id>
 final restaurantIdProvider = Provider<String>((ref) {
-  return Uri.base.queryParameters['restaurant_id'] ?? '';
+  final fromQuery =
+      Uri.base.queryParameters['restaurant_id'] ??
+      Uri.base.queryParameters['restaurantId'] ??
+      '';
+
+  if (fromQuery.isNotEmpty) {
+    return fromQuery;
+  }
+
+  // Some QR links can carry query params in the URL fragment.
+  final fragment = Uri.base.fragment;
+  if (fragment.contains('?')) {
+    final fragmentQuery = Uri.splitQueryString(fragment.split('?').last);
+    final fromFragment =
+        fragmentQuery['restaurant_id'] ?? fragmentQuery['restaurantId'] ?? '';
+    if (fromFragment.isNotEmpty) {
+      return fromFragment;
+    }
+  }
+
+  // Optional local/dev fallback.
+  return const String.fromEnvironment('RESTAURANT_ID');
 });
 
 final orderClientApiServiceProvider = Provider<OrderClientApiService>((ref) {
@@ -24,7 +45,7 @@ final clientMenuProvider = FutureProvider<List<MenuItemDto>>((ref) async {
   final service = ref.watch(orderClientApiServiceProvider);
   final restaurantId = ref.watch(restaurantIdProvider);
   if (restaurantId.isEmpty) {
-    throw StateError('RESTAURANT_ID n\'est pas configure.');
+    return const <MenuItemDto>[];
   }
   return service.fetchMenu(restaurantId);
 });
@@ -33,7 +54,7 @@ final clientTablesProvider = FutureProvider<List<TableDto>>((ref) async {
   final service = ref.watch(orderClientApiServiceProvider);
   final restaurantId = ref.watch(restaurantIdProvider);
   if (restaurantId.isEmpty) {
-    throw StateError('RESTAURANT_ID n\'est pas configure.');
+    return const <TableDto>[];
   }
   return service.fetchTables(restaurantId);
 });
