@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_ordering_client/core/constants/app_constants.dart';
 
@@ -8,17 +7,10 @@ final backendBaseUrlProvider = Provider<String>((ref) {
   return AppConstants.apiBaseUrl;
 });
 
-/// Returns the restaurant ID for this session.
-///
-/// Priority order:
-///   1. `restaurant_id` URL query parameter (web runtime, set by QR code URL)
-///   2. `RESTAURANT_ID` compile-time dart-define (CI / local dev)
+/// Returns the restaurant ID from the URL query parameter `restaurant_id`.
+/// Set by the QR code URL: https://yourapp.netlify.app/?restaurant_id=<id>
 final restaurantIdProvider = Provider<String>((ref) {
-  if (kIsWeb) {
-    final fromUrl = Uri.base.queryParameters['restaurant_id'] ?? '';
-    if (fromUrl.isNotEmpty) return fromUrl;
-  }
-  return const String.fromEnvironment('RESTAURANT_ID');
+  return Uri.base.queryParameters['restaurant_id'] ?? '';
 });
 
 final orderClientApiServiceProvider = Provider<OrderClientApiService>((ref) {
