@@ -26,6 +26,8 @@ class _TableEntryScreenState extends ConsumerState<TableEntryScreen> {
   );
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   String? _selectedTableId;
+  bool _didAutoSelectFromQr = false;
+  bool _didAutoOpenFromQr = false;
 
   @override
   void dispose() {
@@ -59,13 +61,40 @@ class _TableEntryScreenState extends ConsumerState<TableEntryScreen> {
     ).push(MaterialPageRoute(builder: (_) => MenuScreen(session: session)));
   }
 
+  TableDto? _matchTableFromQrToken(List<TableDto> tables, String rawToken) {
+    final token = rawToken.trim();
+    if (token.isEmpty) return null;
+
+    final tokenLower = token.toLowerCase();
+    final tokenNumber = int.tryParse(token);
+
+    bool matches(TableDto table) {
+      if (table.id == token) return true;
+      if (tokenNumber != null && table.number == tokenNumber) return true;
+
+      final qrCode = table.qrCode?.trim();
+      if (qrCode == null || qrCode.isEmpty) return false;
+
+      final qrCodeLower = qrCode.toLowerCase();
+      return qrCodeLower == tokenLower ||
+          qrCodeLower.contains(tokenLower) ||
+          tokenLower.contains(qrCodeLower);
+    }
+
+    return tables.where(matches).firstOrNull;
+  }
+
   Widget _buildRealBackendEntry(BuildContext context) {
     final restaurantId = ref.watch(restaurantIdProvider);
+    final tableLinkToken = ref.watch(tableLinkTokenProvider);
     if (restaurantId.isEmpty) {
       return ListView(
         children: [
           const SizedBox(height: 24),
-          Text('Configuration requise', style: Theme.of(context).textTheme.headlineMedium),
+          Text(
+            'Configuration requise',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
           const SizedBox(height: 8),
           Text(
             'RESTAURANT_ID est manquant. Lancez avec --dart-define=RESTAURANT_ID=votre_id.',
@@ -104,6 +133,30 @@ class _TableEntryScreenState extends ConsumerState<TableEntryScreen> {
                   label: const Text('Recharger'),
                 ),
               );
+            }
+
+            if (!_didAutoSelectFromQr && tableLinkToken.isNotEmpty) {
+              final linkedTable = _matchTableFromQrToken(
+                tables,
+                tableLinkToken,
+              );
+              if (linkedTable != null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  setState(() {
+                    _selectedTableId = linkedTable.id;
+                    _didAutoSelectFromQr = true;
+                  });
+                });
+
+                if (!_didAutoOpenFromQr) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
+                    _didAutoOpenFromQr = true;
+                    _openMenuFromTable(linkedTable);
+                  });
+                }
+              }
             }
 
             final selectedTable = tables
