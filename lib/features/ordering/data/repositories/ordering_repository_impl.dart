@@ -1,6 +1,5 @@
 import 'package:table_ordering_client/core/constants/app_constants.dart';
 import 'package:table_ordering_client/core/network/api_client.dart';
-import 'package:table_ordering_client/features/ordering/data/datasources/ordering_mock_datasource.dart';
 import 'package:table_ordering_client/features/ordering/data/datasources/ordering_remote_datasource.dart';
 import 'package:table_ordering_client/features/ordering/data/models/order_item.dart';
 import 'package:table_ordering_client/features/ordering/domain/entities/cart_item_entity.dart';
@@ -15,18 +14,20 @@ class OrderingRepositoryImpl implements OrderingRepository {
     ApiClient? apiClient,
     OrderClientApiService? apiService,
   }) : _remoteDataSource = OrderingRemoteDataSource(apiClient ?? ApiClient()),
-       _mockDataSource = OrderingMockDataSource(),
        _apiService = apiService;
 
   final OrderingRemoteDataSource _remoteDataSource;
-  final OrderingMockDataSource _mockDataSource;
   final OrderClientApiService? _apiService;
 
   @override
-  Future<TableSessionEntity> validateTable(String tableCode) async {
-    final sourceResult = AppConstants.useMockData
-        ? await _mockDataSource.validateTable(tableCode)
-        : await _remoteDataSource.validateTable(tableCode);
+  Future<TableSessionEntity> validateTable(
+    String tableCode, {
+    String? restaurantId,
+  }) async {
+    final sourceResult = await _remoteDataSource.validateTable(
+      tableCode,
+      restaurantId: restaurantId,
+    );
 
     return TableSessionEntity(
       restaurant: sourceResult.restaurant.toEntity(),
@@ -36,11 +37,6 @@ class OrderingRepositoryImpl implements OrderingRepository {
 
   @override
   Future<List<MenuItemEntity>> getMenu(String restaurantId) async {
-    if (AppConstants.useMockData) {
-      final items = await _mockDataSource.getMenu(restaurantId);
-      return items.map((item) => item.toEntity()).toList();
-    }
-
     if (_apiService != null) {
       final dtos = await _apiService.fetchMenu(restaurantId);
       return dtos
@@ -80,15 +76,6 @@ class OrderingRepositoryImpl implements OrderingRepository {
         )
         .toList();
 
-    if (AppConstants.useMockData) {
-      final createdOrder = await _mockDataSource.createOrder(
-        tableId: tableId,
-        items: payloadItems,
-        globalNote: globalNote,
-      );
-      return createdOrder.toEntity();
-    }
-
     if (_apiService != null) {
       final clientItems = items
           .map(
@@ -121,14 +108,15 @@ class OrderingRepositoryImpl implements OrderingRepository {
         response['created_at'] as String? ?? response['createdAt'] as String?;
     return OrderEntity(
       id: (response['id'] ?? response['_id'] ?? '') as String,
-      tableId: (response['table_id'] ?? response['tableId'] ?? tableId)
-          as String,
+      tableId:
+          (response['table_id'] ?? response['tableId'] ?? tableId) as String,
       items: const [],
       createdAt: rawCreatedAt != null
           ? DateTime.parse(rawCreatedAt)
           : DateTime.now(),
       status: OrderStatus.enAttente,
-      globalNote: response['globalNote'] as String? ??
+      globalNote:
+          response['globalNote'] as String? ??
           response['global_note'] as String?,
       fees: _toDouble(response['fees']),
     );
@@ -145,9 +133,7 @@ class OrderingRepositoryImpl implements OrderingRepository {
 
   @override
   Future<OrderEntity> getOrderById(String orderId) async {
-    final order = AppConstants.useMockData
-        ? await _mockDataSource.getOrderById(orderId)
-        : await _remoteDataSource.getOrderById(orderId);
+    final order = await _remoteDataSource.getOrderById(orderId);
 
     return order.toEntity();
   }
@@ -157,9 +143,10 @@ class OrderingRepositoryImpl implements OrderingRepository {
     String orderId, {
     Duration interval = const Duration(seconds: 5),
   }) {
-    final stream = AppConstants.useMockData
-        ? _mockDataSource.watchOrderStatus(orderId, interval: interval)
-        : _remoteDataSource.watchOrderStatus(orderId, interval: interval);
+    final stream = _remoteDataSource.watchOrderStatus(
+      orderId,
+      interval: interval,
+    );
 
     return stream.map((order) => order.toEntity());
   }

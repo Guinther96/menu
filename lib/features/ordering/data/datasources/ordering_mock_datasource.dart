@@ -62,8 +62,9 @@ class OrderingMockDataSource {
   final Map<String, Order> _orders = {};
 
   Future<({Restaurant restaurant, Table table})> validateTable(
-    String tableCode,
-  ) async {
+    String tableCode, {
+    String? restaurantId,
+  }) async {
     await Future<void>.delayed(const Duration(milliseconds: 650));
 
     if (tableCode.trim().isEmpty || !tableCode.contains('table')) {

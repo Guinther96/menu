@@ -11,11 +11,18 @@ class OrderingRemoteDataSource {
   final ApiClient _apiClient;
 
   Future<({Restaurant restaurant, Table table})> validateTable(
-    String tableCode,
-  ) async {
+    String tableCode, {
+    String? restaurantId,
+  }) async {
+    final resolvedRestaurantId = restaurantId?.trim() ?? '';
+    final queryParameters = <String, dynamic>{'code': tableCode};
+    if (resolvedRestaurantId.isNotEmpty) {
+      queryParameters['restaurant_id'] = resolvedRestaurantId;
+    }
+
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/tables/validate',
-      queryParameters: {'code': tableCode},
+      queryParameters: queryParameters,
     );
 
     final data = response.data ?? <String, dynamic>{};

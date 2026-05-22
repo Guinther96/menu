@@ -52,10 +52,10 @@ class TableSessionNotifier
 
   final ValidateTableUseCase _validateTableUseCase;
 
-  Future<void> validateTable(String code) async {
+  Future<void> validateTable(String code, {String? restaurantId}) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      return _validateTableUseCase(code);
+      return _validateTableUseCase(code, restaurantId: restaurantId);
     });
   }
 }

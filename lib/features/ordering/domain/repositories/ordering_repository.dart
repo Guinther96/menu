@@ -4,7 +4,10 @@ import 'package:table_ordering_client/features/ordering/domain/entities/order_en
 import 'package:table_ordering_client/features/ordering/domain/entities/table_session_entity.dart';
 
 abstract class OrderingRepository {
-  Future<TableSessionEntity> validateTable(String tableCode);
+  Future<TableSessionEntity> validateTable(
+    String tableCode, {
+    String? restaurantId,
+  });
 
   Future<List<MenuItemEntity>> getMenu(String restaurantId);
 

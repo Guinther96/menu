@@ -6,7 +6,7 @@ class ValidateTableUseCase {
 
   final OrderingRepository _repository;
 
-  Future<TableSessionEntity> call(String tableCode) {
-    return _repository.validateTable(tableCode);
+  Future<TableSessionEntity> call(String tableCode, {String? restaurantId}) {
+    return _repository.validateTable(tableCode, restaurantId: restaurantId);
   }
 }
