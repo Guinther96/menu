@@ -62,9 +62,37 @@ class _TableEntryScreenState extends ConsumerState<TableEntryScreen> {
         if (!mounted) return;
         _didAutoValidateFromQr = true;
         _controller.text = tableLinkToken;
+
+        // If the app didn't get a restaurantId from the URL, try to extract
+        // it from the scanned token itself. Common QR encodings either include
+        // the restaurant_id as a query parameter or embed the UUID in the
+        // token (e.g. full URL or path). This makes the flow more tolerant
+        // to different QR formats.
+        String? effectiveRestaurantId = restaurantId.isNotEmpty ? restaurantId : null;
+        if (effectiveRestaurantId == null) {
+          try {
+            final parsed = Uri.tryParse(tableLinkToken);
+            if (parsed != null) {
+              final p = parsed.queryParameters;
+              effectiveRestaurantId = p['restaurant_id']?.trim() ?? p['restaurantId']?.trim();
+            }
+          } catch (_) {
+            // ignore parse errors
+          }
+
+          // Fallback: try to find a UUID inside the token.
+          if (effectiveRestaurantId == null || effectiveRestaurantId.isEmpty) {
+            final uuidRegex = RegExp(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
+            final m = uuidRegex.firstMatch(tableLinkToken);
+            if (m != null) {
+              effectiveRestaurantId = m.group(0);
+            }
+          }
+        }
+
         ref
             .read(tableSessionProvider.notifier)
-            .validateTable(tableLinkToken, restaurantId: restaurantId);
+            .validateTable(tableLinkToken, restaurantId: effectiveRestaurantId);
       });
     }
 
