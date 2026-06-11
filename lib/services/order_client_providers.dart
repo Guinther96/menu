@@ -55,7 +55,12 @@ final backendBaseUrlProvider = Provider<String>((ref) {
 });
 
 /// Returns the restaurant ID from the URL query parameter `restaurant_id`.
-/// Set by the QR code URL: https://yourapp.netlify.app/?restaurant_id=<id>
+/// Set by the QR code URL: https://yourapp.netlify.app/?restaurant_id=RESTAURANT_ID
+const bool useRestaurantIdFallback = bool.fromEnvironment(
+  'USE_RESTAURANT_ID_FALLBACK',
+  defaultValue: false,
+);
+
 final restaurantIdProvider = Provider<String>((ref) {
   final params = _extractLinkParams();
   final fromLink = _pickFirstNonEmpty(params, const [
@@ -70,7 +75,10 @@ final restaurantIdProvider = Provider<String>((ref) {
     return fromLink;
   }
 
-  // Optional local/dev fallback.
+  if (!useRestaurantIdFallback) {
+    return '';
+  }
+
   return const String.fromEnvironment('RESTAURANT_ID').trim();
 });
 
