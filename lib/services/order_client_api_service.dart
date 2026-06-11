@@ -76,10 +76,13 @@ class OrderClientApiService {
   final http.Client _client;
 
   Future<List<MenuItemDto>> fetchMenu(String restaurantId) async {
-    final uri = Uri.parse('$baseUrl/menu/restaurant/$restaurantId');
+    final uri = Uri.parse('$baseUrl/restaurants/$restaurantId/menu');
     final response = await _client.get(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
     );
 
     if (response.statusCode != 200) {
@@ -100,10 +103,13 @@ class OrderClientApiService {
   }
 
   Future<List<TableDto>> fetchTables(String restaurantId) async {
-    final uri = Uri.parse('$baseUrl/tables/restaurant/$restaurantId');
+    final uri = Uri.parse('$baseUrl/restaurants/$restaurantId/tables');
     final response = await _client.get(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
     );
 
     if (response.statusCode != 200) {

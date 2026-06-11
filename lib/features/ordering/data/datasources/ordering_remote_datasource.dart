@@ -18,6 +18,7 @@ class OrderingRemoteDataSource {
     final queryParameters = <String, dynamic>{'code': tableCode};
     if (resolvedRestaurantId.isNotEmpty) {
       queryParameters['restaurant_id'] = resolvedRestaurantId;
+      queryParameters['restaurantId'] = resolvedRestaurantId;
     }
 
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
