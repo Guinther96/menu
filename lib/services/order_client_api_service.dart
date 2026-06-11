@@ -1,6 +1,4 @@
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
+import 'package:table_ordering_client/core/network/api_client.dart';
 
 class MenuItemDto {
   MenuItemDto({
@@ -69,61 +67,30 @@ class CreateOrderItemInput {
 }
 
 class OrderClientApiService {
-  OrderClientApiService({required this.baseUrl, http.Client? client})
-    : _client = client ?? http.Client();
+  OrderClientApiService({required ApiClient apiClient})
+    : _apiClient = apiClient;
 
-  final String baseUrl;
-  final http.Client _client;
+  final ApiClient _apiClient;
 
   Future<List<MenuItemDto>> fetchMenu(String restaurantId) async {
-    final uri = Uri.parse('$baseUrl/restaurants/$restaurantId/menu');
-    final response = await _client.get(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+    final response = await _apiClient.dio.get<List<dynamic>>(
+      '/restaurants/$restaurantId/menu',
     );
+    final data = response.data ?? <dynamic>[];
 
-    if (response.statusCode != 200) {
-      throw Exception(
-        'fetchMenu failed: ${response.statusCode} ${response.body}',
-      );
-    }
-
-    final decoded = jsonDecode(response.body);
-    if (decoded is! List<dynamic>) {
-      throw Exception('Invalid menu payload');
-    }
-
-    return decoded
+    return data
         .whereType<Map<String, dynamic>>()
         .map(MenuItemDto.fromJson)
         .toList();
   }
 
   Future<List<TableDto>> fetchTables(String restaurantId) async {
-    final uri = Uri.parse('$baseUrl/restaurants/$restaurantId/tables');
-    final response = await _client.get(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+    final response = await _apiClient.dio.get<List<dynamic>>(
+      '/restaurants/$restaurantId/tables',
     );
+    final data = response.data ?? <dynamic>[];
 
-    if (response.statusCode != 200) {
-      throw Exception(
-        'fetchTables failed: ${response.statusCode} ${response.body}',
-      );
-    }
-
-    final decoded = jsonDecode(response.body);
-    if (decoded is! List<dynamic>) {
-      throw Exception('Invalid tables payload');
-    }
-
-    return decoded
+    return data
         .whereType<Map<String, dynamic>>()
         .map(TableDto.fromJson)
         .toList();
@@ -137,31 +104,18 @@ class OrderClientApiService {
       throw Exception('createOrder requires at least one item');
     }
 
-    final uri = Uri.parse('$baseUrl/orders');
-    final response = await _client.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/orders',
+      data: {
         'table_id': tableId,
         'items': items.map((x) => x.toJson()).toList(),
-      }),
+      },
     );
 
-    if (response.statusCode != 201) {
-      throw Exception(
-        'createOrder failed: ${response.statusCode} ${response.body}',
-      );
-    }
-
-    final decoded = jsonDecode(response.body);
-    if (decoded is! Map<String, dynamic>) {
-      throw Exception('Invalid create order payload');
-    }
-
-    return decoded;
+    return response.data ?? <String, dynamic>{};
   }
 
   void dispose() {
-    _client.close();
+    // ApiClient manages its own Dio instance; nothing to dispose here.
   }
 }

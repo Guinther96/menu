@@ -12,7 +12,14 @@ void _debugLog(Object? msg) {
 }
 
 class ApiClient {
-  ApiClient() : dio = Dio(BaseOptions(baseUrl: AppConstants.apiBaseUrl)) {
+  ApiClient({String? authToken}) : dio = Dio(
+          BaseOptions(
+            baseUrl: AppConstants.apiBaseUrl,
+            headers: authToken != null && authToken.isNotEmpty
+                ? {'Authorization': 'Bearer $authToken'}
+                : null,
+          ),
+        ) {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {

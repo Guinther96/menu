@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_ordering_client/core/constants/app_constants.dart';
+import 'package:table_ordering_client/core/network/api_client.dart';
 
 import 'order_client_api_service.dart';
 
@@ -54,8 +55,34 @@ final backendBaseUrlProvider = Provider<String>((ref) {
   return AppConstants.apiBaseUrl;
 });
 
-/// Returns the restaurant ID from the URL query parameter `restaurant_id`.
-/// Set by the QR code URL: https://yourapp.netlify.app/?restaurant_id=RESTAURANT_ID
+/// Returns the authorization token from the URL query parameter `auth_token`.
+/// Set by the QR code URL: https://yourapp.netlify.app/?auth_token=TOKEN
+const bool useAuthTokenFallback = bool.fromEnvironment(
+  'USE_AUTH_TOKEN_FALLBACK',
+  defaultValue: false,
+);
+
+final authTokenProvider = Provider<String>((ref) {
+  final params = _extractLinkParams();
+  final fromLink = _pickFirstNonEmpty(params, const [
+    'auth_token',
+    'token',
+    'api_key',
+    'apikey',
+    'authorization',
+    'bearer',
+  ]);
+  if (fromLink.isNotEmpty) {
+    return fromLink;
+  }
+
+  if (!useAuthTokenFallback) {
+    return '';
+  }
+
+  return const String.fromEnvironment('AUTH_TOKEN').trim();
+});
+
 const bool useRestaurantIdFallback = bool.fromEnvironment(
   'USE_RESTAURANT_ID_FALLBACK',
   defaultValue: false,
@@ -98,9 +125,14 @@ final tableLinkTokenProvider = Provider<String>((ref) {
   ]);
 });
 
+final apiClientProvider = Provider<ApiClient>((ref) {
+  final authToken = ref.watch(authTokenProvider);
+  return ApiClient(authToken: authToken.isNotEmpty ? authToken : null);
+});
+
 final orderClientApiServiceProvider = Provider<OrderClientApiService>((ref) {
-  final baseUrl = ref.watch(backendBaseUrlProvider);
-  final service = OrderClientApiService(baseUrl: baseUrl);
+  final apiClient = ref.watch(apiClientProvider);
+  final service = OrderClientApiService(apiClient: apiClient);
   ref.onDispose(service.dispose);
   return service;
 });

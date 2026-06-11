@@ -15,8 +15,12 @@ import 'package:table_ordering_client/features/ordering/domain/usecases/watch_or
 import 'package:table_ordering_client/services/order_client_providers.dart';
 
 final orderingRepositoryProvider = Provider<OrderingRepository>((ref) {
+  final apiClient = ref.watch(apiClientProvider);
   final apiService = ref.watch(orderClientApiServiceProvider);
-  return OrderingRepositoryImpl(apiService: apiService);
+  return OrderingRepositoryImpl(
+    apiClient: apiClient,
+    apiService: apiService,
+  );
 });
 
 final validateTableUseCaseProvider = Provider<ValidateTableUseCase>((ref) {
