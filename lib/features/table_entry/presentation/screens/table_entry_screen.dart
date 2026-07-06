@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_ordering_client/core/theme/app_theme.dart';
 import 'package:table_ordering_client/core/widgets/error_state.dart';
+import 'package:table_ordering_client/features/ordering/domain/entities/table_session_entity.dart';
 import 'package:table_ordering_client/features/ordering/presentation/providers/ordering_providers.dart';
 import 'package:table_ordering_client/features/ordering/presentation/screens/menu_screen.dart';
 import 'package:table_ordering_client/features/ordering/presentation/widgets/responsive_scaffold_body.dart';
@@ -20,6 +21,7 @@ class _TableEntryScreenState extends ConsumerState<TableEntryScreen> {
   );
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _didAutoValidateFromQr = false;
+  bool _didNavigateToMenu = false;
 
   @override
   void dispose() {
@@ -35,10 +37,32 @@ class _TableEntryScreenState extends ConsumerState<TableEntryScreen> {
         .validateTable(_controller.text.trim(), restaurantId: restaurantId);
   }
 
+  void _navigateToMenuIfNeeded(AsyncValue<TableSessionEntity?> sessionState) {
+    if (_didNavigateToMenu) return;
+    if (!mounted) return;
+    final session = sessionState.value;
+    if (session == null || !session.table.isActive) return;
+
+    final hasQrAutoValidation = ref.read(tableLinkTokenProvider).isNotEmpty || _didAutoValidateFromQr;
+    if (!hasQrAutoValidation) return;
+
+    _didNavigateToMenu = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => MenuScreen(session: session)),
+      );
+    });
+  }
+
   Widget _buildRealBackendEntry(BuildContext context) {
     final restaurantId = ref.watch(restaurantIdProvider);
     final tableLinkToken = ref.watch(tableLinkTokenProvider);
     final tableSessionState = ref.watch(tableSessionProvider);
+
+    ref.listen<AsyncValue<TableSessionEntity?>>(tableSessionProvider, (_, next) {
+      _navigateToMenuIfNeeded(next);
+    });
 
     if (restaurantId.isEmpty) {
       return ListView(
