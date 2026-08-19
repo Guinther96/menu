@@ -37,7 +37,7 @@ class OrderingRemoteDataSource {
 
   Future<List<MenuItem>> getMenu(String restaurantId) async {
     final response = await _apiClient.dio.get<List<dynamic>>(
-      '/restaurants/$restaurantId/menu',
+      '/menu/$restaurantId',
     );
     final data = response.data ?? <dynamic>[];
 
@@ -52,9 +52,17 @@ class OrderingRemoteDataSource {
     String? globalNote,
   }) async {
     final payload = {
-      'tableId': tableId,
-      'items': items.map((item) => item.toJson()).toList(),
-      'globalNote': globalNote,
+      'table_id': tableId,
+      'items': items
+          .map(
+            (item) => {
+              'menu_item_id': item.menuItemId,
+              'quantity': item.quantity,
+              'note': item.note,
+            },
+          )
+          .toList(),
+      'global_note': globalNote,
     };
 
     final response = await _apiClient.dio.post<Map<String, dynamic>>(

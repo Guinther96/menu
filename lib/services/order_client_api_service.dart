@@ -74,8 +74,9 @@ class OrderClientApiService {
 
   Future<List<MenuItemDto>> fetchMenu(String restaurantId) async {
     final response = await _apiClient.dio.get<List<dynamic>>(
-      '/restaurants/$restaurantId/menu',
+      '/menu/$restaurantId',
     );
+
     final data = response.data ?? <dynamic>[];
 
     return data
@@ -86,7 +87,7 @@ class OrderClientApiService {
 
   Future<List<TableDto>> fetchTables(String restaurantId) async {
     final response = await _apiClient.dio.get<List<dynamic>>(
-      '/restaurants/$restaurantId/tables',
+      '/tables/$restaurantId',
     );
     final data = response.data ?? <dynamic>[];
 

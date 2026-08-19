@@ -11,10 +11,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_ordering_client/main.dart';
 
 void main() {
-  testWidgets('Affiche l ecran d entree table', (WidgetTester tester) async {
+  testWidgets('Demande de scanner un QR sans restaurant_id dans le lien', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(const ProviderScope(child: RestaurantClientApp()));
 
-    expect(find.text('Bienvenue'), findsOneWidget);
-    expect(find.textContaining('Scannez votre QR code'), findsOneWidget);
+    expect(find.text('Configuration requise'), findsOneWidget);
+    expect(
+      find.textContaining('Le lien QR doit contenir restaurant_id'),
+      findsOneWidget,
+    );
   });
 }

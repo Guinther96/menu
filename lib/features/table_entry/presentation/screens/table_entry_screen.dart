@@ -43,7 +43,8 @@ class _TableEntryScreenState extends ConsumerState<TableEntryScreen> {
     final session = sessionState.value;
     if (session == null || !session.table.isActive) return;
 
-    final hasQrAutoValidation = ref.read(tableLinkTokenProvider).isNotEmpty || _didAutoValidateFromQr;
+    final hasQrAutoValidation =
+        ref.read(tableLinkTokenProvider).isNotEmpty || _didAutoValidateFromQr;
     if (!hasQrAutoValidation) return;
 
     _didNavigateToMenu = true;
@@ -60,7 +61,10 @@ class _TableEntryScreenState extends ConsumerState<TableEntryScreen> {
     final tableLinkToken = ref.watch(tableLinkTokenProvider);
     final tableSessionState = ref.watch(tableSessionProvider);
 
-    ref.listen<AsyncValue<TableSessionEntity?>>(tableSessionProvider, (_, next) {
+    ref.listen<AsyncValue<TableSessionEntity?>>(tableSessionProvider, (
+      _,
+      next,
+    ) {
       _navigateToMenuIfNeeded(next);
     });
 
@@ -92,13 +96,16 @@ class _TableEntryScreenState extends ConsumerState<TableEntryScreen> {
         // the restaurant_id as a query parameter or embed the UUID in the
         // token (e.g. full URL or path). This makes the flow more tolerant
         // to different QR formats.
-        String? effectiveRestaurantId = restaurantId.isNotEmpty ? restaurantId : null;
+        String? effectiveRestaurantId = restaurantId.isNotEmpty
+            ? restaurantId
+            : null;
         if (effectiveRestaurantId == null) {
           try {
             final parsed = Uri.tryParse(tableLinkToken);
             if (parsed != null) {
               final p = parsed.queryParameters;
-              effectiveRestaurantId = p['restaurant_id']?.trim() ?? p['restaurantId']?.trim();
+              effectiveRestaurantId =
+                  p['restaurant_id']?.trim() ?? p['restaurantId']?.trim();
             }
           } catch (_) {
             // ignore parse errors
@@ -106,7 +113,9 @@ class _TableEntryScreenState extends ConsumerState<TableEntryScreen> {
 
           // Fallback: try to find a UUID inside the token.
           if (effectiveRestaurantId == null || effectiveRestaurantId.isEmpty) {
-            final uuidRegex = RegExp(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
+            final uuidRegex = RegExp(
+              r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+            );
             final m = uuidRegex.firstMatch(tableLinkToken);
             if (m != null) {
               effectiveRestaurantId = m.group(0);

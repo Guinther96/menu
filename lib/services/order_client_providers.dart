@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_ordering_client/core/constants/app_constants.dart';
 import 'package:table_ordering_client/core/network/api_client.dart';
+import 'package:table_ordering_client/core/utils/web_location.dart';
 
 import 'order_client_api_service.dart';
 
@@ -20,6 +22,30 @@ Map<String, String> _extractLinkParams() {
     mergeTrimmed(Uri.base.queryParameters);
   } catch (_) {
     // Ignore malformed URL query and continue.
+  }
+
+  // Web fallback: if Uri.base didn't give us params (some hosts), try
+  // parsing window.location.href directly.
+  if (kIsWeb && params.isEmpty) {
+    try {
+      final href = currentWindowHref();
+      if (href != null) {
+        final parsed = Uri.parse(href);
+        mergeTrimmed(parsed.queryParameters);
+
+        final frag = parsed.fragment.trim();
+        if (frag.isNotEmpty) {
+          if (frag.contains('?')) {
+            final fragmentQueryPart = frag.split('?').last;
+            mergeTrimmed(Uri(query: fragmentQueryPart).queryParameters);
+          } else if (frag.contains('=')) {
+            mergeTrimmed(Uri(query: frag).queryParameters);
+          }
+        }
+      }
+    } catch (_) {
+      // ignore
+    }
   }
 
   try {
@@ -123,6 +149,21 @@ final tableLinkTokenProvider = Provider<String>((ref) {
     'tableNumber',
     'number',
   ]);
+});
+
+const bool useTableFallback = bool.fromEnvironment(
+  'USE_TABLE_FALLBACK',
+  defaultValue: false,
+);
+
+/// If table token is not present in the URL, allow using a dart-define
+/// `TABLE_NUMBER` when `USE_TABLE_FALLBACK` is enabled. This helps local
+/// testing where query parameters may not be propagated into `Uri.base`.
+final tableLinkTokenWithFallbackProvider = Provider<String>((ref) {
+  final token = ref.watch(tableLinkTokenProvider);
+  if (token.isNotEmpty) return token;
+  if (!useTableFallback) return '';
+  return const String.fromEnvironment('TABLE_NUMBER').trim();
 });
 
 final apiClientProvider = Provider<ApiClient>((ref) {

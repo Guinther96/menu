@@ -1,4 +1,3 @@
-import 'package:table_ordering_client/core/constants/app_constants.dart';
 import 'package:table_ordering_client/core/network/api_client.dart';
 import 'package:table_ordering_client/features/ordering/data/datasources/ordering_remote_datasource.dart';
 import 'package:table_ordering_client/features/ordering/data/models/order_item.dart';
