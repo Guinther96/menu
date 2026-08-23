@@ -2,6 +2,23 @@ import 'package:table_ordering_client/features/ordering/domain/entities/order_it
 
 enum OrderStatus { enAttente, enPreparation, prete, livree, annulee }
 
+extension OrderStatusLabel on OrderStatus {
+  String get label {
+    switch (this) {
+      case OrderStatus.enAttente:
+        return 'EN_ATTENTE';
+      case OrderStatus.enPreparation:
+        return 'EN_PREPARATION';
+      case OrderStatus.prete:
+        return 'PRETE';
+      case OrderStatus.livree:
+        return 'LIVREE';
+      case OrderStatus.annulee:
+        return 'ANNULEE';
+    }
+  }
+}
+
 class OrderEntity {
   const OrderEntity({
     required this.id,

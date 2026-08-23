@@ -3,6 +3,7 @@ import 'package:table_ordering_client/core/utils/currency_formatter.dart';
 import 'package:table_ordering_client/features/ordering/domain/entities/order_entity.dart';
 import 'package:table_ordering_client/features/ordering/domain/entities/table_session_entity.dart';
 import 'package:table_ordering_client/features/ordering/presentation/screens/order_tracking_screen.dart';
+import 'package:table_ordering_client/features/ordering/presentation/screens/receipt_screen.dart';
 import 'package:table_ordering_client/features/ordering/presentation/widgets/responsive_scaffold_body.dart';
 
 class OrderConfirmationScreen extends StatelessWidget {
@@ -59,6 +60,21 @@ class OrderConfirmationScreen extends StatelessWidget {
               },
               icon: const Icon(Icons.radar_rounded),
               label: const Text('Suivre ma commande'),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ReceiptScreen(
+                      orderId: order.id,
+                      session: session,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.receipt_long_rounded),
+              label: const Text('Voir le reçu'),
             ),
           ],
         ),

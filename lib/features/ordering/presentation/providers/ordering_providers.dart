@@ -221,6 +221,17 @@ final orderStatusStreamProvider = StreamProvider.family<OrderEntity, String>((
   return useCase(orderId);
 });
 
+/// Récupère la commande authoritative depuis le backend (items et montants
+/// réels), à utiliser pour le reçu plutôt que l'OrderEntity renvoyée par
+/// createOrder (dont les items ne sont pas peuplés côté API client).
+final orderByIdProvider = FutureProvider.family<OrderEntity, String>((
+  ref,
+  orderId,
+) {
+  final repository = ref.watch(orderingRepositoryProvider);
+  return repository.getOrderById(orderId);
+});
+
 final elapsedTimeProvider = StreamProvider.family<Duration, DateTime>((
   ref,
   createdAt,
